@@ -41,32 +41,63 @@ class Automato:
         transicao = {}
         for line in template:
             currLine = line.split(", ")
-            transicao[(currLine[0], currLine[1])] = currLine[2]
+
+            if (currLine[0], currLine[1]) in transicao.keys():
+                transicao[(currLine[0], currLine[1])].append(currLine[2])
+            else: 
+                transicao[(currLine[0], currLine[1])] = [currLine[2]]
+
+        for key in transicao.keys(): #converter de listas para tupla
+            transicao[key] = tuple(transicao[key])
 
         return transicao
 
     def processarCaracter(self, estado, caracter):
+        destinos = []
         if caracter not in self.alfabeto or estado not in self.estados:
-            return None #transição para estado inexistente
+            destinos = self.uniao(destinos, [None]) #transição para estado inexistente
 
         else:
             try:
-                return self.transicao[(estado, caracter)]
+                destinos = self.uniao(destinos, self.transicao[(estado, caracter)])
             except KeyError:
-                return None
+                destinos = self.uniao(destinos, [None])
+
+        return destinos
 
     def processarPalavra(self, palavra):
-        atual = self.inicial
+        atuais = [self.inicial]
 
         for caracter in palavra: 
-            atual = self.processarCaracter(atual, caracter)
+            tmp = []
+            for estado in atuais:
+                tmp = self.uniao(tmp, self.processarCaracter(estado, caracter))
 
-        return atual in self.finais
+            atuais = tmp.copy()
+
+
+        for estado in atuais:
+            if estado in self.finais:
+                return True
+
+        return False
+
+    def uniao(self, a, b):
+        unido = []
+
+        for item in a:
+            if item not in unido and item != None:
+                unido.append(item)
+
+        for item in b:
+            if item not in unido and item != None:
+                unido.append(item)
+
+        return unido
 
 #boilerplate 
 if __name__ == "__main__":
     with open("regras.txt", "r") as regras: #editar regras.txt para mudar o comportamento do automato
         tmp = regras.read().split("\n")
         automato = Automato(tmp) #passar como lista simplifica o codigo
-        print(automato.processarPalavra("abaaabab"))
-        
+        print(automato.processarPalavra('abaabbaa'))

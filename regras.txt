@@ -1,8 +1,14 @@
-({a, b}, {q0, q1, q2, q3}, D, q0, {q1, q2})
-q0, a, q2
-q0, b, q1
-q1, a, q3
-q1, b, q2
-q2, a, q3
-q2, b, q0
-q3, a, q0
+({a, b}, {start, s0, s1, s2, s3}, D, start, {s0, s2})
+start, a, s0
+start, a, s1
+start, b, s2
+s0, a, s2
+s0, b, s1
+s0, b, s3
+s1, b, s0
+s1, b, s3
+s2, a, s3
+s2, b, s0
+s3, a, s1
+s3, b, s2
+s3, b, s3
