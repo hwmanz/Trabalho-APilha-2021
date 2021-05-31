@@ -41,7 +41,7 @@ class Automato:
         return dados
 
     # itera pelos itens do arquivo descritor recuperando todas as transições do automato
-    # as transições são guardadas num dicionário com a estrutura {("estado inicial", "caracter lido"): ("estados de destino")}
+    # as transições são guardadas num dicionário com a estrutura {("estado inicial", "caracter lido da palavra", "caracter lido da pilha"): (("estado de destino", "simbolo a ser escrito na pilha"))}
     def recuperarFuncaoDeTransicao(self, template): #itera pelas linhas com o formato "estado atual", "caracter", "destino" extraindo todas as transições
         transicao = {}
         for line in template:
@@ -58,7 +58,7 @@ class Automato:
         return transicao
 
     # recebe um estado, o caracter lido da palavra e da pilha, retorna os destinos e o que deve ser escrito na pilha
-    # atualemnte, não realiza de forma correta o processamento do movimento vazio (-) e os testes de pilha/palavra vazia (?)
+    # atualmente, não realiza de forma correta o processamento do movimento vazio (-) e os testes de pilha/palavra vazia (?)
     # estes casos serão implementados futuramente
     def processarCaracter(self, estado, caracterInput, caracterPilha):
         destinos = []
