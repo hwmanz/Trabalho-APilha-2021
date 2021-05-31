@@ -1,12 +1,14 @@
 class Automato:
     def __init__(self, template): # construtor
         dados = self.recuperarAtributos(list(template.pop(0)))
-        self.alfabeto = dados[0].split(", ")
+        self.alfabeto =dados[0].split(", ")
         self.estados = dados[1].split(", ")
         self.fTransicao = dados[2]
         self.inicial = dados[3]
         self.finais = dados[4].split(", ")
+        self.alfabetoPilha = dados[5].split(", ")
         self.transicao = self.recuperarFuncaoDeTransicao(template)
+        self.reservados = ("-", "?")
 
     # recupera os atributos do automato lendo a primeira linha do arquivo descritor, levando em consideração
     # a necessidade de dados entre chaves serem considerados como um dado só 
@@ -45,29 +47,42 @@ class Automato:
         for line in template:
             currLine = line.split(", ")
 
-            if (currLine[0], currLine[1]) in transicao.keys(): # se ja existe uma transição que parte do estado atual e lê o mesmo caracter, adicione o novo destino na lista de destinos
-                transicao[(currLine[0], currLine[1])].append(currLine[2])
+            if (currLine[0], currLine[1], currLine[2]) in transicao.keys(): # se ja existe uma transição que parte do estado atual e lê o mesmo caracter, adicione o novo destino na lista de destinos
+                transicao[(currLine[0], currLine[1], currLine[2])].append((currLine[3], currLine[4]))
             else: # senão, cria uma transição nova
-                transicao[(currLine[0], currLine[1])] = [currLine[2]]
+                transicao[(currLine[0], currLine[1], currLine[2])] = [(currLine[3], currLine[4])]
 
         for key in transicao.keys(): # converter de listas para tupla. por segurança
             transicao[key] = tuple(transicao[key])
 
         return transicao
 
-    # recebe um estado e um caracter e retorna o resultado desse processamenot
-    def processarCaracter(self, estado, caracter):
+    # recebe um estado, o caracter lido da palavra e da pilha, retorna os destinos e o que deve ser escrito na pilha
+    # atualemnte, não realiza de forma correta o processamento do movimento vazio (-) e os testes de pilha/palavra vazia (?)
+    # estes casos serão implementados futuramente
+    def processarCaracter(self, estado, caracterInput, caracterPilha):
         destinos = []
-        if caracter not in self.alfabeto or estado not in self.estados: # se o estádo ou símbolo não existir
-            destinos = self.uniao(destinos, [None]) # transição para estado inexistente
+        escreverPilha = []
 
-        else: # senão tenta processar o caracter atual
-            try:
-                destinos = self.uniao(destinos, self.transicao[(estado, caracter)])
-            except KeyError:
+        # condicionais usadas para testar se o input é valido, escritas linha por linha para facilitar leitura
+        estadoValido = estado in self.estados
+        cInputValido = caracterInput in self.alfabeto
+        cPilhaValido = caracterPilha in self.alfabetoPilha
+        reservados = caracterInput in self.reservados or caracterPilha in self.reservados
+
+        if ((estadoValido and cInputValido and cPilhaValido) or reservados):
+            try: # tente processar, em caso de sucesso, adicione os resultados ás listas de retorno
+                processamento = self.transicao[(estado, caracterInput, caracterPilha)]
+                for resultado in processamento:
+                    destinos = self.uniao(destinos, [resultado[0]])
+                    if resultado[1] != "-":
+                        escreverPilha = self.uniao(escreverPilha, [resultado[1]])
+            except: # caso falhe, retorne transição para estado inexistente 
                 destinos = self.uniao(destinos, [None])
+        else:
+            destinos = self.uniao(destinos, [None]) 
 
-        return destinos
+        return (destinos, escreverPilha)
 
     # recebe uma palavra e utiliza a função processarCaracter() para processar a palavra iterando por cada caracter
     def processarPalavra(self, palavra):
@@ -104,10 +119,15 @@ class Automato:
 
         return unido
 
+
+    def debug(self):
+        print(f"alfabeto = {self.alfabeto},\nestados = {self.estados}\nfTransicao = {self.fTransicao},\ninicial = {self.inicial},\nfinais = {self.finais},\ntransicao = {self.transicao}.\npilha = {self.alfabetoPilha}")
+
 #boilerplate code
 if __name__ == "__main__":
     with open("regras.txt", "r") as regras: #editar regras.txt para mudar o comportamento do automato
         tmp = regras.read().split("\n") #passar como lista simplifica o codigo
-        automato = Automato(tmp) 
-        palavra = input("insira a palavra a ser processada\n")
-        print(automato.processarPalavra(palavra))
+        automato = Automato(tmp)
+        teste = automato.processarCaracter("q2", "?", "?")
+        automato.debug()
+        print(teste[0], teste[1])
